@@ -107,12 +107,21 @@ class BatchModifyModule(Component):
         self.log.debug('BatchModifyPlugin: existing keywords are %s', original_keywords)
         self.log.debug('BatchModifyPlugin: new keywords are %s', new_keywords)
         
-        regexp = re.compile(r'\W+')
-        combined_keywords = regexp.split(original_keywords)
-        [combined_keywords.append(keyword) for keyword in regexp.split(new_keywords) if keyword not in combined_keywords]
-            
+        regexp = re.compile(r'\,(\w+)?')
+        
+        new_keywords = set([k.strip() for k in regexp.split(new_keywords) if k])
+        combined_keywords = set([k.strip() for k in regexp.split(original_keywords) if k])
+        
+        for keyword in new_keywords:
+            if keyword.startswith('-'):
+                keyword = keyword[1:]
+                if keyword in combined_keywords:
+                    combined_keywords.remove(keyword)
+            else:
+                combined_keywords.add(keyword)
+        
         self.log.debug('BatchModifyPlugin: combined keywords are %s', combined_keywords)
-        return ' '.join(combined_keywords)
+        return ', '.join(combined_keywords)
 
     # ITemplateStreamFilter methods
     def filter_stream(self, req, method, filename, stream, formdata):
