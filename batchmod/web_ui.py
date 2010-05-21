@@ -107,7 +107,7 @@ class BatchModifyModule(Component):
         self.log.debug('BatchModifyPlugin: existing keywords are %s', original_keywords)
         self.log.debug('BatchModifyPlugin: new keywords are %s', new_keywords)
         
-        regexp = re.compile(r'\,(\w+)?')
+        regexp = re.compile(r'[^-\w]+')
         
         new_keywords = set([k.strip() for k in regexp.split(new_keywords) if k])
         combined_keywords = set([k.strip() for k in regexp.split(original_keywords) if k])
