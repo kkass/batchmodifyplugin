@@ -5,7 +5,7 @@
 	xmlns:py="http://genshi.edgewall.org/"
 	xmlns:xi="http://www.w3.org/2001/XInclude">
 <body>
-<form id="batchmod-form" method="post" action="${actionURI}">
+<form id="batchmod-form" method="post">
 <fieldset id="batchmod-fieldset"><legend class="foldable">Batch Modify Properties</legend>
 <table class="properties">
 	<tr py:for="row in group(fields, 2, lambda f: f.type != 'textarea')"
@@ -53,6 +53,7 @@
 </table>
 <div>
     <input type="hidden" name="selectedTickets" value=""/>
+    <input type="hidden" name="query_href" value="${query_href}"/>
     <input type="submit" id="batchmod" name="batchmod" value="Change tickets" />
     <input type="checkbox" id="bmod_modify_changetime" name="bmod_modify_changetime" value="true" checked="checked" />Modify Ticket Changetime
 </div>

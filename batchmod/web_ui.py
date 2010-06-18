@@ -3,7 +3,8 @@
 # Copyright (C) 2007 Dave Gynn
 
 from trac.core import *
-from trac.perm import IPermissionRequestor        
+from trac.config import Option, ListOption
+from trac.perm import IPermissionRequestor
 from trac.ticket import TicketSystem, Ticket
 from trac.ticket.query import QueryModule
 from trac.web.api import ITemplateStreamFilter
@@ -17,6 +18,13 @@ __all__ = ['BatchModifyModule']
 
 class BatchModifyModule(Component):
     implements(IPermissionRequestor, ITemplateProvider, IRequestFilter, ITemplateStreamFilter)
+
+    fields_as_list = ListOption("batchmod", "fields_as_list", default="keywords", 
+                                doc="field names modified as a value list(separated by ',')")
+    list_separator_regex = Option("batchmod", "list_separator_regex", default='[,\s]+',
+                                  doc="separator regex used for 'list' fields")
+    list_connecter_string = Option("batchmod", "list_connector_string", default=',',
+                                   doc="connecter string for 'list' fields")
 
     # IPermissionRequestor methods
     def get_permission_actions(self):
@@ -37,6 +45,9 @@ class BatchModifyModule(Component):
             req.args.get('batchmod') and self._has_permission(req):
             self.log.debug('BatchModifyModule: executing')
             self._batch_modify(req)
+            # redirect to original Query
+            # TODO: need better way to fake QueryModule...
+            req.redirect(req.args.get('query_href'))
         return handler
 
     def post_process_request(self, req, template, content_type):
@@ -75,10 +86,11 @@ class BatchModifyModule(Component):
                 if not modify_changetime:
                   original_changetime = to_utimestamp(t.time_changed)
                 
-                if 'keywords' in values:
-                    values['keywords'] = self._merge_keywords(t.values['keywords'], values['keywords'])
+                _values = values.copy()
+                for field in [f for f in values.keys() if f in self.fields_as_list]:
+                    _values[field] = self._merge_keywords(t.values[field], values[field])
                 
-                t.populate(values)
+                t.populate(_values)
                 t.save_changes(req.authname, comment)
 
                 if not modify_changetime:
@@ -107,21 +119,22 @@ class BatchModifyModule(Component):
         self.log.debug('BatchModifyPlugin: existing keywords are %s', original_keywords)
         self.log.debug('BatchModifyPlugin: new keywords are %s', new_keywords)
         
-        regexp = re.compile(r'[^-\w]+')
+        regexp = re.compile(self.list_separator_regex)
         
-        new_keywords = set([k.strip() for k in regexp.split(new_keywords) if k])
-        combined_keywords = set([k.strip() for k in regexp.split(original_keywords) if k])
+        new_keywords = [k.strip() for k in regexp.split(new_keywords) if k]
+        combined_keywords = [k.strip() for k in regexp.split(original_keywords) if k]
         
         for keyword in new_keywords:
             if keyword.startswith('-'):
                 keyword = keyword[1:]
-                if keyword in combined_keywords:
+                while keyword in combined_keywords:
                     combined_keywords.remove(keyword)
             else:
-                combined_keywords.add(keyword)
+                if keyword not in combined_keywords:
+                    combined_keywords.append(keyword)
         
         self.log.debug('BatchModifyPlugin: combined keywords are %s', combined_keywords)
-        return ', '.join(combined_keywords)
+        return self.list_connecter_string.join(combined_keywords)
 
     # ITemplateStreamFilter methods
     def filter_stream(self, req, method, filename, stream, formdata):
@@ -134,7 +147,7 @@ class BatchModifyModule(Component):
     
     def _generate_form(self, req, data):
         batchFormData = dict(data)
-        batchFormData['actionUri']= req.session['query_href'] or req.href.query()
+        batchFormData['query_href']= req.session['query_href'] or req.href.query()
         
         ticketSystem = TicketSystem(self.env)
         fields = []
