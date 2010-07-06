@@ -7,7 +7,7 @@
 from setuptools import setup, find_packages
 
 PACKAGE = 'BatchModify'
-VERSION = '0.6.0-trac0.12'
+VERSION = '0.7.0a1-trac0.12'
 
 setup(
     name=PACKAGE, version=VERSION,
@@ -17,7 +17,9 @@ setup(
     packages = ['batchmod'],
     package_data={
         'batchmod': [
-            'templates/*.html'
+            'templates/*.html',
+            'htdocs/js/*.js',
+            'htdocs/css/*.css',
         ]
     },
     entry_points = {

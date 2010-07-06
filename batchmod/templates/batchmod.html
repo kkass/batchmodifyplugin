@@ -5,105 +5,59 @@
 	xmlns:py="http://genshi.edgewall.org/"
 	xmlns:xi="http://www.w3.org/2001/XInclude">
 <body>
-<form id="batchmod-form" method="post">
-<fieldset id="batchmod-fieldset"><legend class="foldable">Batch Modify Properties</legend>
-<table class="properties">
-	<tr py:for="row in group(fields, 2, lambda f: f.type != 'textarea')"
-		py:with="fullrow = len(row) == 1">
-		<py:for each="idx, field in enumerate(row)">
-			<th style="text-align: left" class="col${idx + 1}"
-				py:if="idx == 0 or not fullrow">
-				<input py:if="field" type="checkbox" id="bmod_flag_${field.name}" name="bmod_flag_${field.name}" />
-				<label py:if="field" for="bmod_value_${field.name}" class="disabled">${field.label or field.name}:</label>
-			</th>
-			<td class="col${idx + 1}" py:if="idx == 0 or not fullrow"
-				colspan="${fullrow and 3 or None}">
-			<py:choose test="field.type" py:if="field">
-				<select py:when="'select'" id="bmod_value_${field.name}"
-					name="bmod_value_${field.name}" disabled="disabled">
-					<option py:if="field.optional" />
-					<option py:for="option in field.options" py:content="option"/>
-				</select>
-				<textarea py:when="'textarea'" id="bmod_value_${field.name}"
-					name="bmod_value_${field.name}" cols="${field.width or 80}"
-					rows="${field.height or 5}" disabled="disabled" />
-				<span py:when="'checkbox'"> <input type="checkbox"
-					id="bmod_value_${field.name}" name="bmod_value_${field.name}"
-					value="1" disabled="disabled" /> <input type="hidden"
-					name="bmod_value_checkbox_${field.name}" value="1" /> </span>
-				<label py:when="'radio'"
-					py:for="idx, option in enumerate(field.options)" class="disabled">
-					<input type="radio" name="bmod_value_${field.name}" 
-					value="${option}" disabled="disabled" /> ${option} 
-				</label>
-				<input py:otherwise="" type="text" id="bmod_value_${field.name}"
-					name="bmod_value_${field.name}" value="" disabled="disabled" />
-			</py:choose>
+	
+<form id="batchmod_form" method="post">
+	
+<fieldset id="batchmod_fieldset">
+	<legend class="foldable">Batch Modify</legend>
+	<table summary="Batch modification fields">
+		<tr id="batchmod_comment">
+			<th colspan="2">
+                <label for="batchmod_value_comment">Comment:</label>
+            </th>
+			<td class="fullrow"><textarea
+				id="batchmod_value_comment" name="batchmod_value_comment" value="" cols="70" rows="5"/>
 			</td>
-		</py:for>
-	</tr>
-	<tr>
-		<th style="text-align: left"><input type="checkbox"
-			id="bmod_flag_comment" name="bmod_flag_comment" checked="checked" /> <label
-			for="bmod_value_comment">Comment:</label></th>
-		<td class="fullrow" colspan="3"><textarea
-			id="bmod_value_comment" name="bmod_value_comment" value="" cols="70" rows="5"/>
-		</td>
-	</tr>
-</table>
-<div>
-    <input type="hidden" name="selectedTickets" value=""/>
-    <input type="hidden" name="query_href" value="${query_href}"/>
-    <input type="submit" id="batchmod" name="batchmod" value="Change tickets" />
-    <input type="checkbox" id="bmod_modify_changetime" name="bmod_modify_changetime" value="true" checked="checked" />Modify Ticket Changetime
-</div>
-<py:for each="idx, constraints in enumerate(clauses)">
-  <py:for each="constraint_name, constraint in constraints.items()">
-    <py:for each="constraint_value in constraint['values']">
-      <input type="hidden" name="${idx}_${constraint_name}" value="${constraint_value}" />
-      <input py:if="constraint['mode']" type="hidden" name="${idx}_${constraint_name}_mode" value="${constraint['mode']}" />
-    </py:for>
-  </py:for>
-</py:for>
-<py:for each="column in col">
-  <input type="hidden" name="col" value="${column}" />
-</py:for>
-<input py:if="req.args['group']" type="hidden" name="group" value="${req.args['group']}" />
-<input py:if="req.args['groupdesc']" type="hidden" name="groupdesc" value="${req.args['groupdesc']}" />
+		</tr>
+		
+		<tr>
+			<td colspan="3">
+				<label class="batchmod_label" for="add_batchmod_field">Add Field:</label>
+				<select id="add_batchmod_field">
+					<option></option>
+	                <option py:for="field in fields" py:if="field.name not in ('time', 'changetime')" value="${field.name}">${field.label}</option>
+				</select>
+			</td>
+		</tr>
+        <tr>
+            <td colspan="3">
+                <label class="batchmod_label" for="batchmod_modify_changetime">Modify Ticket Changetime</label>
+                <input type="checkbox" id="batchmod_modify_changetime" name="batchmod_modify_changetime" value="true" checked="checked" />
+            </td>
+        </tr>
+	</table>
+	
+	<div>
+	    <input type="hidden" name="selectedTickets" value=""/>
+	    <input type="hidden" name="query_href" value="${query_href}"/>
+	    <input type="submit" id="batchmod_submit" name="batchmod_submit" value="Change tickets" />
+	</div>
+	
+	<py:for each="idx, constraints in enumerate(clauses)">
+	  <py:for each="constraint_name, constraint in constraints.items()">
+	    <py:for each="constraint_value in constraint['values']">
+	      <input type="hidden" name="${idx}_${constraint_name}" value="${constraint_value}" />
+	      <input py:if="constraint['mode']" type="hidden" name="${idx}_${constraint_name}_mode" value="${constraint['mode']}" />
+	    </py:for>
+	  </py:for>
+	</py:for>
+	
+	<input py:if="req.args['group']" type="hidden" name="group" value="${req.args['group']}" />
+	<input py:if="req.args['groupdesc']" type="hidden" name="groupdesc" value="${req.args['groupdesc']}" />
+
 </fieldset>
-<script type="text/javascript">
-jQuery(document).ready(function($){
-  $("table.listing tr td.id").each(
-    function() {
-      tId=$(this).text().substring(1); 
-      $(this).before('<td><input type="checkbox" name="selectedTicket" class="bmod_selector" value="'+tId+'"/></td>');
-    }  
-  ) 
-  $("table.listing tr th.id").each(
-    function() { 
-      $(this).before('<th class="bmod_selector"><input type="checkbox" name="bmod_toggleGroup" /></th>');
-    }  
-  ) 
-  $("input[name='bmod_toggleGroup']").click(function() { 
-    $("tr td input.bmod_selector",$(this).parents("table.listing")).attr("checked",this.checked);
-  })
-  <py:for each="field in fields">
-    $("input[id=bmod_flag_${field.name}]").click(function() { $("*[name=bmod_value_${field.name}]").enable(this.checked);} )
-  </py:for>
-  $("input#bmod_flag_comment").click(function() {enableControl("bmod_value_comment",this.checked);} )
-  $("form#batchmod-form").submit(function() {
-    var selectedTix=[];    
-    $("input[name=selectedTicket]:checked").each( function(){ selectedTix.push(this.value);} ); 
-    $("input[name=selectedTickets]").val(selectedTix);
-    if(selectedTix.length == 0){
-        alert("No tickets selected to modify");
-        return false;
-    }
-  })
-  $(document.getElementById("columns")).toggleClass("collapsed");
-  $("#batchmod-fieldset").toggleClass("collapsed");
-});
-</script>
+
 </form>
 </body>
+
 </html>
