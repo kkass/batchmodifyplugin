@@ -107,7 +107,7 @@ jQuery(document).ready(function($){
     //At least one ticket must be selected to submit the batch.
     $("form#batchmod_form").submit(function() {
         //First remove all existing validation messages.
-        //$(".batchmod_required").detach()
+        $(".batchmod_required").remove();
         
         var valid = true;
         var selectedTix=[];    
