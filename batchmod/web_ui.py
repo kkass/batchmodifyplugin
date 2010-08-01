@@ -9,7 +9,8 @@ from trac.perm import IPermissionRequestor
 from trac.ticket import TicketSystem, Ticket
 from trac.ticket.query import QueryModule
 from trac.web.api import ITemplateStreamFilter
-from trac.web.chrome import ITemplateProvider, Chrome, add_script, add_stylesheet
+from trac.web.chrome import ITemplateProvider, Chrome, \
+                            add_script, add_stylesheet
 from trac.web.main import IRequestFilter
 from trac.util.datefmt import to_datetime, to_utimestamp
 from genshi.filters.transform import Transformer
@@ -18,14 +19,18 @@ import re
 __all__ = ['BatchModifyModule']
 
 class BatchModifyModule(Component):
-    implements(IPermissionRequestor, ITemplateProvider, IRequestFilter, ITemplateStreamFilter)
+    implements(IPermissionRequestor, ITemplateProvider, IRequestFilter,
+               ITemplateStreamFilter)
 
-    fields_as_list = ListOption("batchmod", "fields_as_list", default="keywords", 
-                                doc="field names modified as a value list(separated by ',')")
-    list_separator_regex = Option("batchmod", "list_separator_regex", default='[,\s]+',
-                                  doc="separator regex used for 'list' fields")
-    list_connector_string = Option("batchmod", "list_connector_string", default=',',
-                                   doc="connecter string for 'list' fields")
+    fields_as_list = ListOption("batchmod", "fields_as_list", 
+                default="keywords", 
+                doc="field names modified as a value list(separated by ',')")
+    list_separator_regex = Option("batchmod", "list_separator_regex",
+                default='[,\s]+',
+                doc="separator regex used for 'list' fields")
+    list_connector_string = Option("batchmod", "list_connector_string",
+                default=',',
+                doc="connecter string for 'list' fields")
 
     # IPermissionRequestor methods
     def get_permission_actions(self):
@@ -57,7 +62,9 @@ class BatchModifyModule(Component):
             req.args.get('batchmod_submit') and self._has_permission(req):
             self.log.debug('BatchModifyModule: executing')
             
-            batch_modifier = BatchModifier(self.fields_as_list, self.list_separator_regex, self.list_connector_string)
+            batch_modifier = BatchModifier(self.fields_as_list, 
+                                           self.list_separator_regex, 
+                                           self.list_connector_string)
             batch_modifier.process_request(req, self.env, self.log)
             # redirect to original Query
             # TODO: need better way to fake QueryModule...
@@ -85,14 +92,16 @@ class BatchModifyModule(Component):
     
     def _generate_form(self, req, data):
         batchFormData = dict(data)
-        batchFormData['query_href']= req.session['query_href'] or req.href.query()
+        batchFormData['query_href']= req.session['query_href'] \
+                                     or req.href.query()
         
         ticketSystem = TicketSystem(self.env)
         fields = []
         for field in ticketSystem.get_ticket_fields():
             if field['name'] not in ('summary', 'reporter', 'description'):
                 fields.append(field)
-            if field['name'] == 'owner' and hasattr(ticketSystem, 'eventually_restrict_owner'):
+            if field['name'] == 'owner' \
+                and hasattr(ticketSystem, 'eventually_restrict_owner'):
                 ticketSystem.eventually_restrict_owner(field)
         fields.sort(key=lambda f: f['name'])
         batchFormData['fields']=fields
@@ -111,7 +120,8 @@ class BatchModifyModule(Component):
 class BatchModifier:
     """Modifies a batch of tickets"""
     
-    def __init__(self, fields_as_list, list_separator_regex, list_connector_string):
+    def __init__(self, fields_as_list, list_separator_regex, 
+                 list_connector_string):
         """Pull all the config values in."""
         self._fields_as_list = fields_as_list
         self._list_separator_regex = list_separator_regex
@@ -121,7 +131,9 @@ class BatchModifier:
     def process_request(self, req, env, log):
         tickets = req.session['query_tickets'].split(' ')
         comment = req.args.get('batchmod_value_comment', '')
-        modify_changetime = bool(req.args.get('batchmod_modify_changetime', False))
+        modify_changetime = bool(req.args.get(
+                                              'batchmod_modify_changetime',
+                                              False))
         
         values = self._get_new_ticket_values(req, env) 
         self._check_for_resolution(values)
@@ -129,7 +141,8 @@ class BatchModifier:
 
         selectedTickets = req.args.get('selectedTickets')
         log.debug('BatchModifyPlugin: selected tickets: %s', selectedTickets)
-        selectedTickets = isinstance(selectedTickets, list) and selectedTickets or selectedTickets.split(',')
+        selectedTickets = isinstance(selectedTickets, list) \
+                          and selectedTickets or selectedTickets.split(',')
         if not selectedTickets:
             raise TracError, 'No tickets selected'
         
@@ -139,22 +152,24 @@ class BatchModifier:
                 
                 log_msg = ""
                 if not modify_changetime:
-                  original_changetime = to_utimestamp(t.time_changed)
+                    original_changetime = to_utimestamp(t.time_changed)
                 
                 _values = values.copy()
-                for field in [f for f in values.keys() if f in self._fields_as_list]:
-                    _values[field] = self._merge_keywords(t.values[field], values[field], log)
+                for field in [f for f in values.keys() \
+                              if f in self._fields_as_list]:
+                    _values[field] = self._merge_keywords(t.values[field], 
+                                                          values[field],
+                                                          log)
                 
                 t.populate(_values)
                 t.save_changes(req.authname, comment)
 
                 if not modify_changetime:
-                  log_msg = "(changetime not modified)"
-                  db = env.get_db_cnx()
-                  db.cursor().execute("UPDATE ticket set changetime=%s where id=%s" % (original_changetime, t.id))
-                  db.commit()
+                    self._rest_changetime(env, original_changetime, t)
+                    log_msg = "(changetime not modified)"
 
-                log.debug('BatchModifyPlugin: saved changes to #%s %s' % (id, log_msg))
+                log.debug('BatchModifyPlugin: saved changes to #%s %s' % 
+                          (id, log_msg))
 
     def _get_new_ticket_values(self, req, env):
         """Pull all of the new values out of the post data."""
@@ -168,12 +183,14 @@ class BatchModifier:
         return values
     
     def _check_for_resolution(self, values):
-        """If a resolution has been set the status is automatically set to closed."""
+        """If a resolution has been set the status is automatically
+        set to closed."""
         if values.has_key('resolution'):
             values['status'] = 'closed'
     
     def _remove_resolution_if_not_closed(self, values):
-        """If the status is set to something other than closed the resolution should be removed."""
+        """If the status is set to something other than closed the
+        resolution should be removed."""
         if values.has_key('status') and values['status'] is not 'closed':
             values['resolution'] = ''
 
@@ -182,13 +199,15 @@ class BatchModifier:
         Prevent duplicate keywords by merging the two lists.
         Any keywords prefixed with '-' will be removed.
         """
-        log.debug('BatchModifyPlugin: existing keywords are %s', original_keywords)
+        log.debug('BatchModifyPlugin: existing keywords are %s', 
+                  original_keywords)
         log.debug('BatchModifyPlugin: new keywords are %s', new_keywords)
         
         regexp = re.compile(self._list_separator_regex)
         
         new_keywords = [k.strip() for k in regexp.split(new_keywords) if k]
-        combined_keywords = [k.strip() for k in regexp.split(original_keywords) if k]
+        combined_keywords = [k.strip() for k 
+                             in regexp.split(original_keywords) if k]
         
         for keyword in new_keywords:
             if keyword.startswith('-'):
@@ -199,5 +218,12 @@ class BatchModifier:
                 if keyword not in combined_keywords:
                     combined_keywords.append(keyword)
         
-        log.debug('BatchModifyPlugin: combined keywords are %s', combined_keywords)
+        log.debug('BatchModifyPlugin: combined keywords are %s', 
+                  combined_keywords)
         return self._list_connector_string.join(combined_keywords)
+    
+    def _reset_changetime(self, env, original_changetime, ticket):
+        db = env.get_db_cnx()
+        db.cursor().execute("UPDATE ticket set changetime=%s where id=%s" 
+                            % (original_changetime, ticket.id))
+        db.commit()

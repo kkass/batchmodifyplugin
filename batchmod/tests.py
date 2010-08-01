@@ -14,41 +14,48 @@ class BatchModifyTestCase(unittest.TestCase):
         self._fields_as_list = ['keywords']
         self._list_separator_regex = '[,\s]+'
         self._list_connector_string = ','
-        self._batchmod = web_ui.BatchModifier(self._fields_as_list, self._list_separator_regex, self._list_connector_string)
+        self._batchmod = web_ui.BatchModifier(self._fields_as_list, 
+                                              self._list_separator_regex,
+                                              self._list_connector_string)
     
     def test_merge_keywords_adds_new_keyword(self):        
         original_keywords = 'foo'
         new_keywords = 'bar'
         
-        result = self._batchmod._merge_keywords(original_keywords, new_keywords, self._logger)
+        result = self._batchmod._merge_keywords(original_keywords, 
+                                                new_keywords, self._logger)
         self.assertEqual('foo,bar', result)
     
     def test_merge_keywords_removes_keyword(self):
         original_keywords = 'foo,bar'
         new_keywords = '-bar'
         
-        result = self._batchmod._merge_keywords(original_keywords, new_keywords, self._logger)
+        result = self._batchmod._merge_keywords(original_keywords,
+                                                new_keywords, self._logger)
         self.assertEqual('foo', result)
     
     def test_merge_keywords_does_not_duplicate_keyword(self):
         original_keywords = 'foo'
         new_keywords = 'foo'
         
-        result = self._batchmod._merge_keywords(original_keywords, new_keywords, self._logger)
+        result = self._batchmod._merge_keywords(original_keywords, 
+                                                new_keywords, self._logger)
         self.assertEqual('foo', result)
     
     def test_merge_keywords_adds_multiple_keywords(self):
         original_keywords = 'foo'
         new_keywords = 'bar baz'
         
-        result = self._batchmod._merge_keywords(original_keywords, new_keywords, self._logger)
+        result = self._batchmod._merge_keywords(original_keywords,
+                                                new_keywords, self._logger)
         self.assertEqual('foo,bar,baz', result)
     
     def test_merge_keywords_removes_multiple_keywords(self):
         original_keywords = 'foo,bar,baz'
         new_keywords = '-foo -baz'
         
-        result = self._batchmod._merge_keywords(original_keywords, new_keywords, self._logger)
+        result = self._batchmod._merge_keywords(original_keywords,
+                                                new_keywords, self._logger)
         self.assertEqual('bar', result)
     
     def test_remove_resolution_if_not_closed_sets_resolution_to_empty_string_when_status_is_not_closed(self):
