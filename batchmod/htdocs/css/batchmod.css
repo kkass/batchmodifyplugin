@@ -4,21 +4,21 @@
 #batchmod_form fieldset input,
 #batchmod_form fieldset select,
 .batchmod_label {
-	font-size: 11px;
+    font-size: 11px;
 }
 
 #batchmod_form fieldset input#batchmod_submit {
-	font-size: 14px;
+    font-size: 14px;
 }
 
 #batchmod_form fieldset input[type="button"]{
-	padding: 0.1em 0.5em;
+    padding: 0.1em 0.5em;
 }
 
 #batchmod_form th {
     text-align: right;
-	white-space: nowrap;
-	font-size: 11px;
+    white-space: nowrap;
+    font-size: 11px;
 }
 
 .batchmod_property {
@@ -26,12 +26,12 @@
 }
 
 .batchmod_required {
-	color: red;
-	font-size: 11px;
-	font-weight: bold;
-	font-style: italic;
-	padding-left: .5em;
+    color: red;
+    font-size: 11px;
+    font-weight: bold;
+    font-style: italic;
+    padding-left: .5em;
 }
 .batchmod_required:before {
-	content: " * ";
+    content: " * ";
 }
