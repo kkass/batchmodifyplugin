@@ -187,7 +187,7 @@ class BatchModifier:
                     _values = values.copy()
                     for field in [f for f in values.keys() \
                                   if f in self._fields_as_list]:
-                        _values[field] = self._merge_keywords(t.values[field], 
+                        _values[field] = self._merge_keywords(t.values[field],
                                                               values[field],
                                                               log)
                     
@@ -195,7 +195,7 @@ class BatchModifier:
                     t.save_changes(req.authname, comment)
 
                     if not modify_changetime:
-                        self._rest_changetime(env, original_changetime, t)
+                        self._reset_changetime(env, original_changetime, t)
                         log_msg = "(changetime not modified)"
 
                     log.debug('BatchModifyPlugin: saved changes to #%s %s' % 
