@@ -146,6 +146,34 @@ class BatchModifier:
         if not selectedTickets:
             raise TracError, 'No tickets selected'
         
+        self._save_ticket_changes(req, selectedTickets, tickets, 
+                                  values, comment)
+
+    def _get_new_ticket_values(self, req, env):
+        """Pull all of the new values out of the post data."""
+        values = {}
+        for field in TicketSystem(env).get_ticket_fields():
+            name = field['name']
+            if name not in ('summary', 'reporter', 'description'):
+                value = req.args.get('batchmod_value_' + name)
+                if value is not None:
+                    values[name] = value
+        return values
+    
+    def _check_for_resolution(self, values):
+        """If a resolution has been set the status is automatically
+        set to closed."""
+        if values.has_key('resolution'):
+            values['status'] = 'closed'
+    
+    def _remove_resolution_if_not_closed(self, values):
+        """If the status is set to something other than closed the
+        resolution should be removed."""
+        if values.has_key('status') and values['status'] is not 'closed':
+            values['resolution'] = ''
+
+    def _save_ticket_changes(self, req, selected_tickets, tickets, 
+                             new_values, comment):
         for id in selectedTickets:
             if id in tickets:
                 t = Ticket(env, int(id))
@@ -170,29 +198,6 @@ class BatchModifier:
 
                 log.debug('BatchModifyPlugin: saved changes to #%s %s' % 
                           (id, log_msg))
-
-    def _get_new_ticket_values(self, req, env):
-        """Pull all of the new values out of the post data."""
-        values = {}
-        for field in TicketSystem(env).get_ticket_fields():
-            name = field['name']
-            if name not in ('summary', 'reporter', 'description'):
-                value = req.args.get('batchmod_value_' + name)
-                if value is not None:
-                    values[name] = value
-        return values
-    
-    def _check_for_resolution(self, values):
-        """If a resolution has been set the status is automatically
-        set to closed."""
-        if values.has_key('resolution'):
-            values['status'] = 'closed'
-    
-    def _remove_resolution_if_not_closed(self, values):
-        """If the status is set to something other than closed the
-        resolution should be removed."""
-        if values.has_key('status') and values['status'] is not 'closed':
-            values['resolution'] = ''
 
     def _merge_keywords(self, original_keywords, new_keywords, log):
         """
