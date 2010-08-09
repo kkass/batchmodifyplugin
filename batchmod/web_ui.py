@@ -174,30 +174,32 @@ class BatchModifier:
 
     def _save_ticket_changes(self, req, selected_tickets, tickets, 
                              new_values, comment):
-        for id in selectedTickets:
-            if id in tickets:
-                t = Ticket(env, int(id))
-                
-                log_msg = ""
-                if not modify_changetime:
-                    original_changetime = to_utimestamp(t.time_changed)
-                
-                _values = values.copy()
-                for field in [f for f in values.keys() \
-                              if f in self._fields_as_list]:
-                    _values[field] = self._merge_keywords(t.values[field], 
-                                                          values[field],
-                                                          log)
-                
-                t.populate(_values)
-                t.save_changes(req.authname, comment)
+        @with_transaction(self.env)
+        def _implementation(db):
+            for id in selectedTickets:
+                if id in tickets:
+                    t = Ticket(env, int(id))
+                    
+                    log_msg = ""
+                    if not modify_changetime:
+                        original_changetime = to_utimestamp(t.time_changed)
+                    
+                    _values = values.copy()
+                    for field in [f for f in values.keys() \
+                                  if f in self._fields_as_list]:
+                        _values[field] = self._merge_keywords(t.values[field], 
+                                                              values[field],
+                                                              log)
+                    
+                    t.populate(_values)
+                    t.save_changes(req.authname, comment)
 
-                if not modify_changetime:
-                    self._rest_changetime(env, original_changetime, t)
-                    log_msg = "(changetime not modified)"
+                    if not modify_changetime:
+                        self._rest_changetime(env, original_changetime, t)
+                        log_msg = "(changetime not modified)"
 
-                log.debug('BatchModifyPlugin: saved changes to #%s %s' % 
-                          (id, log_msg))
+                    log.debug('BatchModifyPlugin: saved changes to #%s %s' % 
+                              (id, log_msg))
 
     def _merge_keywords(self, original_keywords, new_keywords, log):
         """
