@@ -146,7 +146,7 @@ class BatchModifier:
         if not selectedTickets:
             raise TracError, 'No tickets selected'
         
-        self._save_ticket_changes(req, selectedTickets, tickets, 
+        self._save_ticket_changes(req, env, log, selectedTickets, tickets, 
                                   values, comment)
 
     def _get_new_ticket_values(self, req, env):
@@ -172,7 +172,7 @@ class BatchModifier:
         if values.has_key('status') and values['status'] is not 'closed':
             values['resolution'] = ''
 
-    def _save_ticket_changes(self, req, selected_tickets, tickets, 
+    def _save_ticket_changes(self, req, env, log, selected_tickets, tickets, 
                              new_values, comment):
         @with_transaction(self.env)
         def _implementation(db):
