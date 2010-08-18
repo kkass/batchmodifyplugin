@@ -172,7 +172,7 @@ class BatchModifier:
         if values.has_key('status') and values['status'] is not 'closed':
             values['resolution'] = ''
 
-    def _save_ticket_changes(self, req, env, log, selected_tickets, tickets, 
+    def _save_ticket_changes(self, req, env, log, selectedTickets, tickets, 
                              new_values, comment, modify_changetime):
         @with_transaction(self.env)
         def _implementation(db):
