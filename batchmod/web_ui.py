@@ -147,7 +147,7 @@ class BatchModifier:
             raise TracError, 'No tickets selected'
         
         self._save_ticket_changes(req, env, log, selectedTickets, tickets, 
-                                  values, comment)
+                                  values, comment, modify_changetime)
 
     def _get_new_ticket_values(self, req, env):
         """Pull all of the new values out of the post data."""
@@ -173,7 +173,7 @@ class BatchModifier:
             values['resolution'] = ''
 
     def _save_ticket_changes(self, req, env, log, selected_tickets, tickets, 
-                             new_values, comment):
+                             new_values, comment, modify_changetime):
         @with_transaction(self.env)
         def _implementation(db):
             for id in selectedTickets:
