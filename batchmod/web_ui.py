@@ -5,6 +5,7 @@
 
 from trac.core import *
 from trac.config import Option, ListOption
+from trac.db.api import with_transaction
 from trac.perm import IPermissionRequestor
 from trac.ticket import TicketSystem, Ticket
 from trac.ticket.query import QueryModule
