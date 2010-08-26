@@ -175,7 +175,7 @@ class BatchModifier:
 
     def _save_ticket_changes(self, req, env, log, selectedTickets, tickets, 
                              new_values, comment, modify_changetime):
-        @with_transaction(self.env)
+        @with_transaction(env)
         def _implementation(db):
             for id in selectedTickets:
                 if id in tickets:
