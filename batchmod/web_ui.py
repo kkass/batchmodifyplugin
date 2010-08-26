@@ -185,11 +185,11 @@ class BatchModifier:
                     if not modify_changetime:
                         original_changetime = to_utimestamp(t.time_changed)
                     
-                    _values = values.copy()
-                    for field in [f for f in values.keys() \
+                    _values = new_values.copy()
+                    for field in [f for f in new_values.keys() \
                                   if f in self._fields_as_list]:
                         _values[field] = self._merge_keywords(t.values[field],
-                                                              values[field],
+                                                              new_values[field],
                                                               log)
                     
                     t.populate(_values)
