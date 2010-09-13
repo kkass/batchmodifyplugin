@@ -97,6 +97,8 @@ class BatchModifyModule(Component):
         batchFormData = dict(data)
         batchFormData['query_href']= req.session['query_href'] \
                                      or req.href.query()
+        batchFormData['notify_enabled'] = self.config.getbool('notification', 
+                                                        'smtp_enabled', False)
         
         ticketSystem = TicketSystem(self.env)
         fields = []
