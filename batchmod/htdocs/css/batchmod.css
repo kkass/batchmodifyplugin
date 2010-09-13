@@ -7,10 +7,6 @@
     font-size: 11px;
 }
 
-#batchmod_form fieldset input#batchmod_submit {
-    font-size: 14px;
-}
-
 #batchmod_form fieldset input[type="button"]{
     padding: 0.1em 0.5em;
 }
