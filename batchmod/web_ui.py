@@ -160,10 +160,19 @@ class BatchModifier:
     def _get_new_ticket_values(self, req, env):
         """Pull all of the new values out of the post data."""
         values = {}
+        
+        # Get the current users name.
+        if req.authname and req.authname != 'anonymous':
+            user = req.authname
+        else:
+            user = req.session.get('email') or req.session.get('name') or None
+        
         for field in TicketSystem(env).get_ticket_fields():
             name = field['name']
             if name not in ('summary', 'reporter', 'description'):
                 value = req.args.get('batchmod_value_' + name)
+                if name == 'owner' and value == '$USER':
+                    value = user
                 if value is not None:
                     values[name] = value
         return values
