@@ -32,8 +32,8 @@ class BatchModifyModule(Component):
                 default='[,\s]+',
                 doc="separator regex used for 'list' fields")
     list_connector_string = Option("batchmod", "list_connector_string",
-                default=',',
-                doc="connecter string for 'list' fields")
+                default=' ',
+                doc="Connector string for 'list' fields. Defaults to a space.")
 
     # IPermissionRequestor methods
     def get_permission_actions(self):

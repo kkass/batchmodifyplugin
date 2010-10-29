@@ -13,7 +13,7 @@ class BatchModifyTestCase(unittest.TestCase):
         self._logger = logger_factory()
         self._fields_as_list = ['keywords']
         self._list_separator_regex = '[,\s]+'
-        self._list_connector_string = ','
+        self._list_connector_string = ' '
         self._batchmod = web_ui.BatchModifier(self._fields_as_list, 
                                               self._list_separator_regex,
                                               self._list_connector_string)
@@ -24,10 +24,10 @@ class BatchModifyTestCase(unittest.TestCase):
         
         result = self._batchmod._merge_keywords(original_keywords, 
                                                 new_keywords, self._logger)
-        self.assertEqual('foo,bar', result)
+        self.assertEqual('foo bar', result)
     
     def test_merge_keywords_removes_keyword(self):
-        original_keywords = 'foo,bar'
+        original_keywords = 'foo bar'
         new_keywords = '-bar'
         
         result = self._batchmod._merge_keywords(original_keywords,
@@ -48,10 +48,10 @@ class BatchModifyTestCase(unittest.TestCase):
         
         result = self._batchmod._merge_keywords(original_keywords,
                                                 new_keywords, self._logger)
-        self.assertEqual('foo,bar,baz', result)
+        self.assertEqual('foo bar baz', result)
     
     def test_merge_keywords_removes_multiple_keywords(self):
-        original_keywords = 'foo,bar,baz'
+        original_keywords = 'foo bar baz'
         new_keywords = '-foo -baz'
         
         result = self._batchmod._merge_keywords(original_keywords,
