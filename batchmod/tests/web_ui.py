@@ -1,11 +1,12 @@
-from trac.test import EnvironmentStub, Mock
-from trac.log import logger_factory
 from trac.config import Option, ListOption
+from trac.log import logger_factory
+from trac.test import EnvironmentStub, Mock
+from trac.util.datefmt import utc
 
 import unittest
 import logging
 
-import web_ui
+from batchmod.web_ui import BatchModifyModule, BatchModifier
 
 class BatchModifyTestCase(unittest.TestCase):
     
@@ -14,9 +15,12 @@ class BatchModifyTestCase(unittest.TestCase):
         self._fields_as_list = ['keywords']
         self._list_separator_regex = '[,\s]+'
         self._list_connector_string = ' '
-        self._batchmod = web_ui.BatchModifier(self._fields_as_list, 
+        self._batchmod = BatchModifier(self._fields_as_list, 
                                               self._list_separator_regex,
                                               self._list_connector_string)
+        self._env = EnvironmentStub(default_data=True)
+        self._req = Mock(href=self._env.href, authname='anonymous', tz=utc)
+        self._req.session = {}
     
     def test_merge_keywords_adds_new_keyword(self):        
         original_keywords = 'foo'
@@ -82,6 +86,35 @@ class BatchModifyTestCase(unittest.TestCase):
         values = {}
         self._batchmod._check_for_resolution(values)
         self.assertEqual({}, values)
+        
+    def test_get_new_ticket_values_sets_owner_to_session_email_if_not_authenticated(self):
+        """If the owner field is set to $USER and there is no authenticated
+        user, then use the email address in the session."""
+        batch = BatchModifyModule(self._env)
+        self._req.args = {}
+        self._req.args['batchmod_value_owner'] = '$USER'
+        self._req.session['email'] = 'joe@example.com'
+        values = self._batchmod._get_new_ticket_values(self._req, self._env)
+        self.assertEqual(values['owner'], 'joe@example.com')
+        
+    def test_get_new_ticket_values_sets_owner_to_session_name_if_not_authenticated_and_no_email(self):
+        """If the owner field is set to $USER and there is no authenticated
+        user or email address, then use the name in the session."""
+        batch = BatchModifyModule(self._env)
+        self._req.args = {}
+        self._req.args['batchmod_value_owner'] = '$USER'
+        self._req.session['name'] = 'joe'
+        values = self._batchmod._get_new_ticket_values(self._req, self._env)
+        self.assertEqual(values['owner'], 'joe')
+    
+    def test_get_new_ticket_values_sets_owner_to_authenticated_user(self):
+        """If the owner field is set to $USER and there is an authenticated
+        user, then set the owner to that user."""
+        self._req.args = {}
+        self._req.args['batchmod_value_owner'] = '$USER'
+        self._req.authname = 'joe'
+        values = self._batchmod._get_new_ticket_values(self._req, self._env)
+        self.assertEqual(values['owner'], 'joe')
 
 def suite():
     return unittest.makeSuite(BatchModifyTestCase, 'test')
