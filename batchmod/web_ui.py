@@ -103,7 +103,7 @@ class BatchModifyModule(Component):
         ticketSystem = TicketSystem(self.env)
         fields = []
         for field in ticketSystem.get_ticket_fields():
-            if field['name'] not in ('summary', 'reporter', 'description'):
+            if field['name'] not in ('summary', 'description'):
                 fields.append(field)
             if field['name'] == 'owner' \
                 and hasattr(ticketSystem, 'eventually_restrict_owner'):
@@ -169,7 +169,7 @@ class BatchModifier:
         
         for field in TicketSystem(env).get_ticket_fields():
             name = field['name']
-            if name not in ('summary', 'reporter', 'description'):
+            if name not in ('summary', 'description'):
                 value = req.args.get('batchmod_value_' + name)
                 if name == 'owner' and value == '$USER':
                     value = user
